@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*.vue": "vue",
+    "*.wpy": "vue",
+    "*.wxml": "html",
+    "*.wxss": "css",
+    "cmath": "cpp"
+  },
+  "python.pythonPath": "D:\\Program Files\\ana\\python.exe"
+}
