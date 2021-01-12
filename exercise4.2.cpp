@@ -8,6 +8,11 @@ struct locate
   int y;
 };
 
+int connect(locate l1, locate l2)
+{
+  return 1;
+}
+
 int insquare(locate l1)
 {
   if (l1.x < n && l1.x > 0 && l1.y < n && l1.y > 0)
@@ -28,7 +33,7 @@ int main()
   printf("请输入有黑点的坐标，输入0表示输入完成 \n ");
   int ans[n];
   memset(ans, 0, sizeof(ans));
-  while (scanf("%d", &x, &y) == 2 && x != -1)
+  while (scanf("%d %d", &x, &y) == 2 && x != -1)
   {
     squares[x][y] = 1;
   }
