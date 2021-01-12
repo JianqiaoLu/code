@@ -6,8 +6,8 @@ using namespace std;
 struct student
 {
   int  cid;
-  char  sid[100];
-  char name[100];
+  char  sid[5];
+  char name[5];
   int scores[4] ,rank, total ; 
   double average;
   int del = 1;
@@ -41,7 +41,7 @@ student scastu(){
   return s1;
 }
 void pristu(student s1){
-  printf("%d", s1.sid);
+  printf("%s", s1.sid);
   printf("%d", s1.cid);
   printf("%s", s1.name);
   for (int i = 0; i < 4; i++)
@@ -101,6 +101,7 @@ void show()
 int add()
 {
   printf("Pleas enter the SID, CID, name and four scoures");
+  printf("\n");
   student s1 = scastu();
   for (int i = 0; i < num; i++)
   {
