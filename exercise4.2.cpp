@@ -12,6 +12,11 @@ int connect(locate l1, locate l2)
   return 1;
 }
 
+int connect(locate l1, locate l2)
+{
+  return 1;
+}
+
 int insquare(locate l1)
 {
   if (l1.x < n && l1.x > 0 && l1.y < n && l1.y > 0)
