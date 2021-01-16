@@ -7,15 +7,12 @@ struct locate
   int x;
   int y;
 };
-int connect(locate l1, locate l2)
-{
-  return 1;
-}
 
 int connect(locate l1, locate l2)
 {
   return 1;
 }
+
 
 int insquare(locate l1)
 {
@@ -40,6 +37,7 @@ int main()
   while (scanf("%d %d", &x, &y) == 2 && x != -1)
   {
     squares[x][y] = 1;
+    printf("\n");
   }
   for (int i = 0; i < n - 1; i++)
   {
