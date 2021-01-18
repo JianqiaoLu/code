@@ -73,7 +73,6 @@ int done()
   }
   return 1;
 }
-
 void pristu(student s, int i)
 {
   cout << "time:" << timeless;

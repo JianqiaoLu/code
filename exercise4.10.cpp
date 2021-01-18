@@ -31,7 +31,7 @@ void calans(int &vol, int &num, int heit)
   {
     for (int j = 0; j < m; j++)
     {
-      if (a[i][j] < heit)
+      if (a[i][j] <= heit)
       {
         vol += a[i][j] * 10 * 10;
         num++;
@@ -56,8 +56,8 @@ int main()
   cout << "请输入一共有多少水分" << endl;
   cin >> floor;
   int volumn, heit;
-  int max1 = max(  floor/(n*m * 100), heit ) ;
-  for (heit = max1; heit >= 1; heit++)
+  int max1 = floor/(100) ;
+  for (heit = max1; heit >= 1; heit -- )
   {
     volumn = calvol(heit);
     if (volumn < floor)
@@ -78,7 +78,7 @@ int main()
   {
     int num, vol;
     calans(vol, num, heit);
-    ans = (floor - vol) / (num * 10 * 10);
+    ans = (double) (floor  + vol) / (num * 10 * 10);
     cout << "ans is " << ans << endl;
   }
 }

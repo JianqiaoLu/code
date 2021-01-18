@@ -3,9 +3,9 @@
 #include<string.h> 
 #include<iostream>  
 #include<algorithm> 
-#include<map>
-#include<vector>
-#include<cctype>
+#include<map> 
+#include<vector> 
+#include<cctype> 
 using namespace std; 
 map<string, int> cnt;
 vector<string> words;
@@ -38,7 +38,7 @@ int main()
     }
     cnt[ans] ++;
   }
-
+   
 vector<string> ans1;
 for (int i = 0; i < words.size(); i++)
 {
@@ -51,6 +51,3 @@ for (int i = 0; i < ans1.size(); i++)
 {
   cout<<ans1[i]<<endl;
 }
-
-}
-

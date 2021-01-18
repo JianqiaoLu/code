@@ -77,6 +77,7 @@ void pileover(int &p1, int &h1, int &p2)
   pile[p1].resize(h1);
 }
 
+
 int main()
 {
   int a, b;

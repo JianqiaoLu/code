@@ -198,6 +198,8 @@ def altertating_minimization(n, edge):
     data3 = []
     data.append(intial[want])
     data2.append(intial)
+    data4= []
+    nu = 1
     for num in range(100):
         phi, flow, energy_changephi = electrical_flow(n, res)
         data3.append(energy_changephi)
@@ -209,7 +211,6 @@ def altertating_minimization(n, edge):
              capacity_raw[edge[i][1]] +=  edge[i][2]**2/previous[i]
            for i in range(len(capacity_raw)):
              residual  += (phi - previous_phi)[i]**2 *min(capacity_raw)
-
            print("residual : %f" % residual)
            print("iterate number: %d" % num)
            print("energy :%d" % energy_changephi)
@@ -225,12 +226,11 @@ def altertating_minimization(n, edge):
         # print('=== after round %4d ===' % i)
         # import pdb 
         # print('energy_reduced_by_phi= %f' %  ( energy_changeres - energy_changephi))
-   
         # weights = update_cvx(phi, edge)
         weights = update_accurate(phi,edge)
+     
         
         congestion = []
-        
         for i in range(len(edge)):
           congestion.append((flow[i][2] / edge[i][2])**2)
          
@@ -238,6 +238,12 @@ def altertating_minimization(n, edge):
         #  print("energy_decrease_gradient = %f" % ans )/woshitaincai1
 
         capacity = [(1/x[2])**2 for x in edge]
+        capacity_true =[ x[2] for x in edge ] 
+        for i in range(0,2):
+          nu *= weights[i]**(capacity_true[i]/24)
+          
+          
+        data4.append(nu)
         resistance = np.array(weights)* np.array(capacity)
         sss = []
         for i in range(len(resistance)):
@@ -281,16 +287,18 @@ def altertating_minimization(n, edge):
 
         data.append(phi)
         data2.append(weight_res)
-    return phi, flow, data, data2,data3
+    return phi, flow, data, data2,data3, data4
 
 # In[ ]: j
-phi, flow , data, data2,data3= altertating_minimization(n, edge) 
+phi, flow , data, data2,data3, data4= altertating_minimization(n, edge) 
 df = pd.DataFrame(data = data)
 df2 = pd.DataFrame(data = data2)
 df3 = pd.DataFrame(data = data3)
+df4 = pd.DataFrame(data = data4)
 df.to_excel("test1.xlsx")
 df2.to_excel("test2.xlsx")
 df3.to_excel("test3.xlsx")
+df4.to_excel("test4.xlsx")
 # 
 # w_1 = data
 # x = [i for i in range(0,len(w_1))]
