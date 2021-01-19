@@ -199,7 +199,6 @@ def altertating_minimization(n, edge):
     data.append(intial[want])
     data2.append(intial)
     data4= []
-    nu = 1
     for num in range(100):
         phi, flow, energy_changephi = electrical_flow(n, res)
         data3.append(energy_changephi)
@@ -239,9 +238,9 @@ def altertating_minimization(n, edge):
 
         capacity = [(1/x[2])**2 for x in edge]
         capacity_true =[ x[2] for x in edge ] 
+        nu = 1
         for i in range(0,2):
           nu *= weights[i]**(capacity_true[i]/24)
-          
           
         data4.append(nu)
         resistance = np.array(weights)* np.array(capacity)
