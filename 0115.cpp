@@ -82,6 +82,7 @@ using namespace std;
 //   }
   
 // }
+
 #include<vector>
 vector<int> pile[100];
 int n;
@@ -93,18 +94,16 @@ void find_block(int a, int& p, int* h)
     {
       if (pile[p][h] == a)
       {
-        return
+        return; 
       }
     }
   }
 }
-void moveover(int& p1, int& h1,int& p2)
+void moveover(int& p1, int& h1,int& p2);
 int main()
 {
   for (int i = h1+1; i < pile[p1].size(); i++)
   {
-    pile[p2].push_back(pile[p1][i])
+    pile[p2].push_back(pile[p1][i]);
   }
-  
-  
 }

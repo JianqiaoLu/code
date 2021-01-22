@@ -1,17 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
+#!/usr/bin/env python # coding: utf-8 # In[ ]: # In[ ]: 
 import numpy as np 
 import pandas as pd
+import cvxpy as cp
 
 from matplotlib import pyplot as plt
  
@@ -26,7 +16,7 @@ global epsilon
 epsilon = 0.00001
 global want 
 want = 1
-def test_graph():
+def test_graph_1():
     return 6, [[0, 1, 20],
                [0, 2, 4],
                [1, 2, 10],
@@ -51,10 +41,60 @@ def test_graph_2():
                [2, 6, 310],
                [1, 6, 151],
                [4, 6, 103]]
+              
 
+def test_graph_3():
+  return 8,[[0, 1, 20],
+            [0, 2, 12],
+            [0, 3, 19],
+            [1, 4, 12],
+            [2, 5, 6],
+            [3, 6, 8],
+            [4, 7, 12],
+            [5, 7, 12],
+            [6, 7, 11]]
+
+
+def test_graph_4():
+  return 6,[[0, 1, 20],
+            [1, 2, 8],
+            [2, 3, 6],
+            [2, 4, 14],
+            [3, 4, 6],
+            [4, 5, 12]]
+
+def test_graph_5():
+  return 14,[[0, 1, 20],
+            [0, 2, 8],
+            [1, 3, 6],
+            [1, 4, 19],
+            [2, 5, 14],
+            [2, 6, 9],
+            [3, 7, 13],
+            [3, 8, 21],
+            [4, 9, 29],
+            [4, 10, 12],
+            [5, 11, 31],
+            [6, 12, 17],
+            [7, 13, 5],
+            [8, 13, 17],
+            [9, 13, 28],
+            [10, 13, 10],
+            [11, 13, 11],
+            [12, 13, 7]]
+
+def test_graph_6():
+
+  return 6,[[0, 1, 20],
+            [0, 2, 24],
+            [1, 3, 19],
+            [2, 3, 15],
+            [4, 3, 11],
+            [2, 4, 14],
+            [1, 4, 37],
+            [3, 5, 48]]
 
 # In[ ]:
-
 
 def test_graph_unit_cap():
     return 6, [[0, 1, 1],
@@ -71,9 +111,14 @@ def test_graph_unit_cap():
 # In[ ]:
 
 
-n, edge = test_graph()
+# n, edge = test_graph_6()
 # n, edge = test_graph_unit_cap()
-
+# min_cut = [0,1] for test_graph_1
+# min_cut = [0,1] for test_graph_2
+# min_cut  = [3,4,5] for test_graph_3
+# min_cut = [1] for test_graph_4
+# min_cut = [0,1] for test_graph_5
+ 
 
 # print('1111') # print(n) # In[ ]:
 
@@ -107,7 +152,7 @@ def electrical_flow(n, res):
 # In[ ]:
 
 
-phi, flow, energy = electrical_flow(n, edge)
+# phi, flow, energy = electrical_flow(n, edge)
 # print(phi)
 # print(flow)
 # print("energy:",energy)
@@ -181,54 +226,53 @@ def update_accurate(phi, edge):
 
 # In[ ]:
 
-
-def altertating_minimization(n, edge):
-    global want
+def altertating_minimization(n, edge,min_cut = []):
     CAP = 1e+8
     m = len(edge)
     #eps = .01/m
     res = [[i, j, m*c**2] for i, j, c in edge]
     # zhiyi真的是天才
-    energy_changeres  = 0
     previous = None
     previous_phi = None
-    data = []
+    data1 = []
     data2 = []
-    intial = np.ones(m)/(m)
     data3 = []
-    data.append(intial[want])
-    data2.append(intial)
     data4= []
-    for num in range(100):
+    import math
+    for num in range(200):
         phi, flow, energy_changephi = electrical_flow(n, res)
-        data3.append(energy_changephi)
-        capacity_raw = np.zeros(n)
-        residual = 0
-        if num != 0:
-           for i in range(m):
-             capacity_raw[edge[i][0]] +=  edge[i][2]**2/previous[i]
-             capacity_raw[edge[i][1]] +=  edge[i][2]**2/previous[i]
-           for i in range(len(capacity_raw)):
-             residual  += (phi - previous_phi)[i]**2 *min(capacity_raw)
-           print("residual : %f" % residual)
-           print("iterate number: %d" % num)
-           print("energy :%d" % energy_changephi)
-        
-        previous_phi = phi
+
+        data2.append(math.sqrt(energy_changephi))
+        # capacity_raw = np.zeros(n)
+        # residual = 1
+        capacity=[ x[2] for x in edge ] 
+        weights = update_accurate(phi,edge)
+        nu = 1
+        for i in min_cut:
+          nu *= weights[i]**(capacity[i]/24)
+        data4.append(nu)
+        # if num != 0:
+          #  for i in range(m):
+            #  capacity_raw[edge[i][0]] +=  edge[i][2]**2/previous[i]
+            #  capacity_raw[edge[i][1]] +=  edge[i][2]**2/previous[i]
+          #  for i in range(len(capacity_raw)):
+            #  residual  += (phi - previous_phi)[i]**2 *min(capacity_raw)
+          #  print("residual : %f" % residual)
+          #  print("iterate number: %d" % num)
+          #  print("energy :%d" % math.sqrt(energy_changephi))
+          #  print("nu:%f" % nu) 
+        # previous_phi = phi
         
         # if num % 10 == 0:
            
         F = [k for i,j,k in flow if i == 0]
         F = sum(F)
-        energy_term1 = [k  for i,j,k in flow if i == 0]
-        energy_term1 = sum(energy_term1)
+        # energy_term1 = [k  for i,j,k in flow if i == 0]
+        # energy_term1 = sum(energy_term1)
         # print('=== after round %4d ===' % i)
         # import pdb 
         # print('energy_reduced_by_phi= %f' %  ( energy_changeres - energy_changephi))
         # weights = update_cvx(phi, edge)
-        weights = update_accurate(phi,edge)
-     
-        
         congestion = []
         for i in range(len(edge)):
           congestion.append((flow[i][2] / edge[i][2])**2)
@@ -236,37 +280,33 @@ def altertating_minimization(n, edge):
         #  ans =  (np.array(weights) -  np.array( previous) )@  np.array(congestion)
         #  print("energy_decrease_gradient = %f" % ans )/woshitaincai1
 
-        capacity = [(1/x[2])**2 for x in edge]
-        capacity_true =[ x[2] for x in edge ] 
-        nu = 1
-        for i in range(0,2):
-          nu *= weights[i]**(capacity_true[i]/24)
-          
-        data4.append(nu)
-        resistance = np.array(weights)* np.array(capacity)
-        sss = []
-        for i in range(len(resistance)):
-           sss.append([edge[i][0],edge[i][1],1/resistance[i]])
+        # capacity = [(1/x[2])**2 for x in edge]
+        # resistance = np.array(weights)* np.array(capacity)
+
+        # sss = []
+        # 
+        # for i in range(len(resistance)):
+          #  sss.append([edge[i][0],edge[i][1],1/resistance[i]])
             # print('energy = %f' % energy)
         W = sum([abs(phi[i]-phi[j])*c for i, j, c in edge])
-        # in
-        weight_res = []
         res = [[i, j, min(c*W/abs(phi[i]-phi[j]), CAP)] for i, j, c in edge]
-        for i in range(len(res)):
-           a  = 1/res[i][2] * edge[i][2]**2
-           weight_res.append(a)
-        ex_cut = ( sum(abs(phi[i]-phi[j]) * c for i,j,c in edge))
+        # in
+        # weight_res = []
+        # res = [[i, j, min(c*W/abs(phi[i]-phi[j]), CAP)] for i, j, c in edge]
 
-        
-        energy_changeres = sum([(phi[i]-phi[j])**2*r for i, j, r in res])
-        energy_changeres2 = sum([(phi[i]-phi[j])**2*r for i, j, r in sss])
-        
-        data3.append(energy_changeres)
-        capacity_raw = np.zeros(n)
+        # for i in range(len(res)):
+          #  a  = 1/res[i][2] * edge[i][2]**2
+          #  weight_res.append(a)
+        # ex_cut = ( sum(abs(phi[i]-phi[j]) * c for i,j,c in edge))
+        # energy_changeres = sum([(phi[i]-phi[j])**2*r for i, j, r in res]) 
+        # energy_changeres2 = sum([(phi[i]-phi[j])**2*r for i, j, r in sss])
+        # 
+        data3.append(weights)
+        # capacity_raw = np.zeros(n)
         # import pdb 
         # pdb.set_trace()
         
-        previous = weights 
+        # previous = weights 
         
         # if num % 1 == 0:
         #   print('energy = %f' %  np.sqrt( energy_changeres))
@@ -281,23 +321,20 @@ def altertating_minimization(n, edge):
          
         #     c = max([flow[j][2]/edge[j][2] for j in range(len(edge))])
             #print([flow[j][2]/edge[j][2] for j in range(len(edge))])
-            #print(c)
-            #print([[i, j, f/c] for i, j, f in flow])
-
-        data.append(phi)
-        data2.append(weight_res)
-    return phi, flow, data, data2,data3, data4
+        data1.append(phi)
+        
+    return phi, flow,data1, data2,data3, data4
 
 # In[ ]: j
-phi, flow , data, data2,data3, data4= altertating_minimization(n, edge) 
-df = pd.DataFrame(data = data)
-df2 = pd.DataFrame(data = data2)
-df3 = pd.DataFrame(data = data3)
-df4 = pd.DataFrame(data = data4)
-df.to_excel("test1.xlsx")
-df2.to_excel("test2.xlsx")
-df3.to_excel("test3.xlsx")
-df4.to_excel("test4.xlsx")
+# phi, flow , data, data2,data3, data4= altertating_minimization(n, edge) 
+# df = pd.DataFrame(data = data)
+# df2 = pd.DataFrame(data = data2)
+# df3 = pd.DataFrame(data = data3)
+# df4 = pd.DataFrame(data = data4)
+# df2.to_excel("energy.xlsx")
+# df3.to_excel("weightsj.xlsx")
+
+# df4.to_excel("nu.xlsx")
 # 
 # w_1 = data
 # x = [i for i in range(0,len(w_1))]
