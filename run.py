@@ -114,7 +114,7 @@ def g_nedge(g, e_cap):
 
 # v_index = g.new_vertex_property("int")
 # v_index.a = np.array(range( 0, g.num_vertices()))
-def draw(g, flag):
+def draw(g, flag, ind):
     v_index1 = g.new_vertex_property("int")
     v_index1.a = np.ones(g.num_vertices())
     g.set_directed(False)
@@ -131,13 +131,14 @@ def draw(g, flag):
     pos[0] = [min_x - 1, avg_y]
     pos[g.num_vertices() - 1] = [max_x + 1, avg_y]
     
+    name = "output" + str ( ind - 3) + ".png"
     graph_draw(
         g,
         pos=pos,
         vertex_fill_color=flag,
-        vertex_text=g.vertex_index,
-        output="output.png",
+        output= name,
     )
+    
 
 
 def find_mincut(phi, g):
@@ -160,20 +161,22 @@ def find_mincut(phi, g):
 
 
 def main():
-    g, e_cap = rd_graph(15, 30)
-    n, edge = g_nedge(g, e_cap)
-    phi, flow,data1, data2, data3, data4 = altertating_minimization(n, edge)
-    min_cut, flag = find_mincut(phi, g)
-    draw(g, flag)
-    phi, flow, data1, data2, data3, data4 = altertating_minimization(n, edge, min_cut)
-    df = pd.DataFrame(data=data1)
-    df2 = pd.DataFrame(data=data2)
-    df3 = pd.DataFrame(data=data3)
-    df4 = pd.DataFrame(data=data4)
-    df.to_excel("phi.xlsx")
-    df2.to_excel("energy.xlsx")
-    df3.to_excel("weightsj.xlsx")
-    df4.to_excel("nu.xlsx")
+    for i in range (4,100):
+      g, e_cap = rd_graph( i , 30)
+      n, edge = g_nedge(g, e_cap)
+      phi, flow,data1, data2, data3, data4, f= altertating_minimization(n, edge)
+      min_cut, flag = find_mincut(phi, g)
+      draw(g, flag,i )
+      phi, flow, data1, data2, data3, data4, f = altertating_minimization(n, edge, min_cut)
+      df = pd.DataFrame(data=data1)
+      df2 = pd.DataFrame(data=data2)
+      df3 = pd.DataFrame(data=data3)
+      df4 = pd.DataFrame(data=data4)
+      f = f + str (i - 3)
+      df.to_excel("phi__" + f +".xlsx")
+      df2.to_excel("energy__"+f+ ".xlsx")
+      df3.to_excel("weights__" + f + ".xlsx")
+      df4.to_excel("nu__"+ f + ".xlsx")
 
 
 if __name__ == "__main__":

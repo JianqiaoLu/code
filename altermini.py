@@ -4,6 +4,7 @@ import pandas as pd
 import cvxpy as cp
 
 from matplotlib import pyplot as plt
+
  
 # # Input Format
 # 
@@ -174,7 +175,7 @@ def update_cvx(phi, edge):
      objective +=  ((phi1-phi2)**2*cap**2)* cp.inv_pos(x[k])
     # 原来倒数需要用inv_pos
     objective =cp.Minimize(objective)
-    constraints = [0.0000001 <=x,  sum(x) == 1 ]
+    constraints = [0.000001 <=x,  sum(x) == 1 ]
     prob = cp.Problem(objective, constraints)
     result = prob.solve()
     # please remember that we can speficy using one index of some variable
@@ -238,10 +239,10 @@ def altertating_minimization(n, edge,min_cut = []):
     data2 = []
     data3 = []
     data4= []
+    flag = "y"
     import math
     for num in range(200):
         phi, flow, energy_changephi = electrical_flow(n, res)
-
         data2.append(math.sqrt(energy_changephi))
         # capacity_raw = np.zeros(n)
         # residual = 1
@@ -250,6 +251,13 @@ def altertating_minimization(n, edge,min_cut = []):
         nu = 1
         for i in min_cut:
           nu *= weights[i]**(capacity[i]/24)
+        if  data4 != []:
+          if abs(nu - data4[-1]) < 1e-4:
+            break
+        if  data4 != []:
+          if nu < data4[-1]:
+            flag = "n"
+            break
         data4.append(nu)
         # if num != 0:
           #  for i in range(m):
@@ -323,7 +331,7 @@ def altertating_minimization(n, edge,min_cut = []):
             #print([flow[j][2]/edge[j][2] for j in range(len(edge))])
         data1.append(phi)
         
-    return phi, flow,data1, data2,data3, data4
+    return phi, flow,data1, data2,data3, data4, flag
 
 # In[ ]: j
 # phi, flow , data, data2,data3, data4= altertating_minimization(n, edge) 
