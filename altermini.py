@@ -251,13 +251,9 @@ def altertating_minimization(n, edge,min_cut = []):
         nu = 1
         for i in min_cut:
           nu *= weights[i]**(capacity[i]/24)
-        if  data4 != []:
-          if abs(nu - data4[-1]) < 1e-4:
-            break
-        if  data4 != []:
+        if  data4 != [] and flag == 'y':
           if nu < data4[-1]:
             flag = "n"
-            break
         data4.append(nu)
         # if num != 0:
           #  for i in range(m):
