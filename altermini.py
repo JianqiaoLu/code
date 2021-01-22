@@ -227,7 +227,7 @@ def update_accurate(phi, edge):
 
 # In[ ]:
 
-def altertating_minimization(n, edge,min_cut = []):
+def altertating_minimization(n, edge,min_cut = [], cut_val = 1):
     CAP = 1e+8
     m = len(edge)
     #eps = .01/m
@@ -243,6 +243,8 @@ def altertating_minimization(n, edge,min_cut = []):
     import math
     for num in range(200):
         phi, flow, energy_changephi = electrical_flow(n, res)
+        if data2 != [] and abs(data2[-1]  - math.sqrt(energy_changephi)) < 1e-3:
+          break
         data2.append(math.sqrt(energy_changephi))
         # capacity_raw = np.zeros(n)
         # residual = 1
@@ -250,7 +252,7 @@ def altertating_minimization(n, edge,min_cut = []):
         weights = update_accurate(phi,edge)
         nu = 1
         for i in min_cut:
-          nu *= weights[i]**(capacity[i]/24)
+          nu *= weights[i]**(capacity[i]/cut_val )
         if  data4 != [] and flag == 'y':
           if nu < data4[-1]:
             flag = "n"

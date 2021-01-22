@@ -131,7 +131,7 @@ def draw(g, flag, ind):
     pos[0] = [min_x - 1, avg_y]
     pos[g.num_vertices() - 1] = [max_x + 1, avg_y]
     
-    name = "output" + str ( ind - 3) + ".png"
+    name = "/userhome/cs/lujianq/code/data/output" + str ( ind - 3) + ".png"
     graph_draw(
         g,
         pos=pos,
@@ -164,19 +164,23 @@ def main():
     for i in range (4,100):
       g, e_cap = rd_graph( i , 30)
       n, edge = g_nedge(g, e_cap)
-      phi, flow,data1, data2, data3, data4, f= altertating_minimization(n, edge)
+      phi, flow,data1, data2, data3, data4, f= altertating_minimization(n, edge,)
       min_cut, flag = find_mincut(phi, g)
       draw(g, flag,i )
-      phi, flow, data1, data2, data3, data4, f = altertating_minimization(n, edge, min_cut)
+      phi, flow, data1, data2, data3, data4, f = altertating_minimization(n, edge, min_cut,int (data2[-1]))
+
+      ca = pd.DataFrame(data= edge)
       df = pd.DataFrame(data=data1)
       df2 = pd.DataFrame(data=data2)
       df3 = pd.DataFrame(data=data3)
       df4 = pd.DataFrame(data=data4)
       f = f + str (i - 3)
-      df.to_excel("phi__" + f +".xlsx")
-      df2.to_excel("energy__"+f+ ".xlsx")
-      df3.to_excel("weights__" + f + ".xlsx")
-      df4.to_excel("nu__"+ f + ".xlsx")
+      path = '/userhome/cs/lujianq/code/data/'
+      ca.to_excel(path + "capacity__" + f +".xlsx")
+      df.to_excel(path + "phi__" + f +".xlsx")
+      df2.to_excel(path + "energy__"+f+ ".xlsx")
+      df3.to_excel(path  + "weights__" + f + ".xlsx")
+      df4.to_excel(path + "nu__"+ f + ".xlsx")
 
 
 if __name__ == "__main__":
