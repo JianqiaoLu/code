@@ -3,6 +3,7 @@ from graph_tool.all import *
 import numpy as np
 from numpy.random import *  # for random sampling
 from altermini import *
+import os
 
 
 def rd_graph(max_vertex, max_capacity):
@@ -92,29 +93,31 @@ def rd_graph_1(max_vertex, max_capacity):
 def nedge_g(n, edge):
     g = Graph()
     e_weights = g.new_edge_property("int")
-    for i in range(0,n):
+    for i in range(0, n):
         g.add_vertex()
     for e in edge:
-        v1 = e[0], v2 = e[1]
+        v1 = e[0]
+        v2 = e[1]
         v1 = g.vertex(v1)
-        v2 = g.vertex(v2) 
-        g.add_edge(v1,v2)
-        e_weights[e] = e[2]
+        v2 = g.vertex(v2)
+        t = g.add_edge(v1, v2)
+        e_weights[t] = e[2]
     g.edge_properties["cap"] = e_weights
     return g, e_weights
+
 
 def g_nedge(g, e_cap):
     edge_list = []
     g.edge_properties["cap"] = e_cap
     for e in g.edges():
-        single_edge = [int(e.source()), int(e.target()), e_cap[e]] 
+        single_edge = [int(e.source()), int(e.target()), e_cap[e]]
         edge_list.append(single_edge)
     return g.num_vertices(), edge_list
-       
+
 
 # v_index = g.new_vertex_property("int")
 # v_index.a = np.array(range( 0, g.num_vertices()))
-def draw(g, flag, ind):
+def draw(g, flag=[], ind=-1):
     v_index1 = g.new_vertex_property("int")
     v_index1.a = np.ones(g.num_vertices())
     g.set_directed(False)
@@ -130,15 +133,27 @@ def draw(g, flag, ind):
     avg_y = avg_y / g.num_vertices()
     pos[0] = [min_x - 1, avg_y]
     pos[g.num_vertices() - 1] = [max_x + 1, avg_y]
-    
-    name = "/userhome/cs/lujianq/code/data/output" + str ( ind - 3) + ".png"
-    graph_draw(
-        g,
-        pos=pos,
-        vertex_fill_color=flag,
-        output= name,
-    )
-    
+    filepath = os.getcwd() + '/data/output'
+    filepath +=  str(ind - 3) + ".png"
+    if len(flag):
+        graph_draw(
+            g,
+            pos=pos,
+            vertex_size=20,
+            vertex_fill_color=np.ones(g.num_vertices()),
+            vertex_text = g.vertex_index,
+            output=filepath,
+        )
+    else:
+        flag  = np.ones(g.num_vertices())
+        graph_draw(
+            g,
+            pos=pos,
+            vertex_size=20,
+            vertex_fill_color=flag,
+            vertex_text = g.vertex_index,
+            output=filepath,
+        )
 
 
 def find_mincut(phi, g):
@@ -161,28 +176,39 @@ def find_mincut(phi, g):
 
 
 def main():
-    for i in range (4,100):
-      g, e_cap = rd_graph( i , 30)
-      n, edge = g_nedge(g, e_cap)
-      phi, flow,data1, data2, data3, data4, f= altertating_minimization(n, edge,)
-      min_cut, flag = find_mincut(phi, g)
-      draw(g, flag,i )
-      phi, flow, data1, data2, data3, data4, f = altertating_minimization(n, edge, min_cut,int (data2[-1]))
+    n, edge = test_graph_6()
+    g, weights = nedge_g(n, edge)
+    draw(g)
 
-      ca = pd.DataFrame(data= edge)
-      df = pd.DataFrame(data=data1)
-      df2 = pd.DataFrame(data=data2)
-      df3 = pd.DataFrame(data=data3)
-      df4 = pd.DataFrame(data=data4)
-      f = f + str (i - 3)
-      path = '/userhome/cs/lujianq/code/data/'
-      ca.to_excel(path + "capacity__" + f +".xlsx")
-      df.to_excel(path + "phi__" + f +".xlsx")
-      df2.to_excel(path + "energy__"+f+ ".xlsx")
-      df3.to_excel(path  + "weights__" + f + ".xlsx")
-      df4.to_excel(path + "nu__"+ f + ".xlsx")
+
+def main1():
+    for i in range(4, 100):
+        g, e_cap = rd_graph(i, 30)
+        n, edge = g_nedge(g, e_cap)
+        phi, flow, data1, data2, data3, data4, f = altertating_minimization(
+            n,
+            edge,
+        )
+        min_cut, flag = find_mincut(phi, g)
+        draw(g, flag, i)
+        phi, flow, data1, data2, data3, data4, f = altertating_minimization(
+            n, edge, min_cut, int(data2[-1])
+        )
+        edge.append(min_cut)
+        ca = pd.DataFrame(data=edge)
+        df = pd.DataFrame(data=data1)
+        df2 = pd.DataFrame(data=data2)
+        df3 = pd.DataFrame(data=data3)
+        df4 = pd.DataFrame(data=data4)
+        f = f + str(i - 3)
+        filepath = os.getcwd() + '/data/'
+        ca.to_excel(filepath + "capacity__" + f + ".xlsx")
+        df.to_excel(filepath + "phi__" + f + ".xlsx")
+        df2.to_excel(filepath + "energy__" + f + ".xlsx")
+        df3.to_excel(filepath + "weights__" + f + ".xlsx")
+        df4.to_excel(filepath + "nu__" + f + ".xlsx")
 
 
 if __name__ == "__main__":
     # execute only if run as a script
-    main()
+    main1()
