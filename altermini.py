@@ -13,8 +13,6 @@ from matplotlib import pyplot as plt
 # In[ ]:
 global iter
 iter = 0
-global epsilon
-epsilon = 0.00001
 global want
 want = 1
 
@@ -22,9 +20,9 @@ want = 1
 def test_graph_1():
     return 6, [
         [0, 1, 20],
-        [0, 2, 4],
         [1, 2, 10],
         [1, 3, 10],
+        [0, 2, 4],
         [2, 3, 9],
         [2, 4, 14],
         [3, 5, 20],
@@ -198,33 +196,30 @@ def update_cvx(phi, edge):
 
 
 def update_accurate(phi, edge):
-    global iter, epsilon
+    global iter 
+    epsilon = 0.0001/len(edge)
     iter += 1
     W = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
     uc_wets = [1 / W * abs(phi[i] - phi[j]) * c for i, j, c in edge]
     index = [i for i in range(len(uc_wets)) if uc_wets[i] < epsilon]
-
-    pre = 1
-
+    pre = []
     while index:
         if pre == index:
             break
         deleted = 0
         for k in index:
             deleted += abs(phi[edge[k][0]] - phi[edge[k][1]]) * edge[k][2]
-            W -= deleted
-
+        W -= deleted
         uc_wets = [
             (1 - len(index) * epsilon) / W * abs(phi[i] - phi[j]) * c
             for i, j, c in edge
         ]
-
         for k in index:
             uc_wets[k] = epsilon
         # if iter % 10 == 0:
         #   print(iter, index)
         pre = index
-        index = [i for i in range(len(uc_wets)) if uc_wets[i] <= epsilon]
+        index = [i for i in range(0, len(uc_wets)) if uc_wets[i] <= epsilon]
     # if iter % 10 == 0:
     #   import pdb
     #   pdb.set_trace()
@@ -241,6 +236,8 @@ def update_accurate(phi, edge):
 # In[ ]:
 
 import math
+
+
 def altertating_minimization(n, edge, min_cut=[], cut_val=1):
     CAP = 1e8
     m = len(edge)
@@ -263,6 +260,12 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
         # residual = 1
         capacity = [x[2] for x in edge]
         weights = update_accurate(phi, edge)
+        W = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
+        # res = [[i, j, min(c * W / abs(phi[i] - phi[j]), CAP)] for i, j, c in edge]
+        res = []
+        for id in range(0, len(edge)):
+          item = [edge[id][0], edge[id][1], edge[id][2]**2/ weights[id]]
+          res.append(item)
         nu = 1
         for i in min_cut:
             nu *= weights[i] ** (capacity[i] / cut_val)
@@ -290,10 +293,6 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
         # import pdb
         # print('energy_reduced_by_phi= %f' %  ( energy_changeres - energy_changephi))
         # weights = update_cvx(phi, edge)
-        congestion = []
-        for i in range(len(edge)):
-            congestion.append((flow[i][2] / edge[i][2]) ** 2)
-
         #  ans =  (np.array(weights) -  np.array( previous) )@  np.array(congestion)
         #  print("energy_decrease_gradient = %f" % ans )/woshitaincai1
 
@@ -305,8 +304,6 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
         # for i in range(len(resistance)):
         #  sss.append([edge[i][0],edge[i][1],1/resistance[i]])
         # print('energy = %f' % energy)
-        W = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
-        res = [[i, j, min(c * W / abs(phi[i] - phi[j]), CAP)] for i, j, c in edge]
         data1.append(phi)
         data3.append(weights)
         # in
