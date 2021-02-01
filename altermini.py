@@ -1,18 +1,18 @@
 #!/usr/bin/env python # coding: utf-8 # In[ ]: # In[ ]:
+import math 
 import numpy as np
 import pandas as pd
 import cvxpy as cp
 
-from matplotlib import pyplot as plt
-
+from scipy.sparse.linalg import spsolve
 
 # # Input Format
 #
-# Consider an undirected graph $G = (V, E)$. Let $n = |V|$ and $m = |E|$ denote the numbers of vertices and edges respectively. Assume WLOG that $V = \{0, 1, 2, \dots, n-1\}$ with $s = 0$ and $t = n-1$. The input specifies $n$ and a list of edges each of which is given by a tuple $(i, j, c)$, i.e., the vertices $i$ and $j$ and the capacity $c$.
+# Consider an undirected graph $G = (V, E)$. Let $n = |V|$ and $m = |E|$ denote the numbers of vertices and edges respectively. Assume WLOG that $V = \{0, 1, 2, \dots, n-1\}$ with $s = 0$ and $t = n-1$. The input specifies $n$ and a list of edges each of which is given by a tuple $(i, j, c)$, i.e., the vertices $i$ and $j$ and the cap $c$.
 
 # In[ ]:
 global iter
-iter = 0
+ter = 0
 global want
 want = 1
 
@@ -103,7 +103,19 @@ def test_graph_6():
         [3, 5, 48],
     ]
 
+def test_graph_7():
+  return 3,[
+    [0,1,1],
+    [0,1,2],
+    [1,2,4],
+  ]
 
+def test_graph_8():
+  return 3,[
+    [0,1,1],
+    [0,1,2],
+    [1,2,4],
+  ]
 # In[ ]:
 
 
@@ -126,11 +138,11 @@ def test_graph_unit_cap():
 
 # n, edge = test_graph_6()
 # n, edge = test_graph_unit_cap()
-# min_cut = [0,1] for test_graph_1
-# min_cut = [0,1] for test_graph_2
-# min_cut  = [3,4,5] for test_graph_3
-# min_cut = [1] for test_graph_4
-# min_cut = [0,1] for test_graph_5
+# min_cuts = [0,1] for test_graph_1
+# min_cuts = [0,1] for test_graph_2
+# min_cuts  = [3,4,5] for test_graph_3
+# min_cuts = [1] for test_graph_4
+# min_cuts = [0,1] for test_graph_5
 
 
 # print('1111') # print(n) # In[ ]:
@@ -155,6 +167,8 @@ def electrical_flow(n, res):
     b[n - 1] = 0.0
     # add 1-0 cosntraint to   variable phi
     # qifei
+    # phi = spsolve(A, b)
+    
     phi = np.linalg.inv(A) @ b
     # @ operation just work as np.dot
     flow = [[i, j, (phi[i] - phi[j]) * r] for i, j, r in res]
@@ -195,94 +209,91 @@ def update_cvx(phi, edge):
     return x.value
 
 
-def update_accurate(phi, edge):
-    global iter 
-    epsilon = 0.0001/len(edge)
-    iter += 1
+def update_w(phi, edge):
+    eps_m = 0.0001 / len(edge)
     W = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
-    uc_wets = [1 / W * abs(phi[i] - phi[j]) * c for i, j, c in edge]
-    index = [i for i in range(len(uc_wets)) if uc_wets[i] < epsilon]
+    e_all = [1 / W * abs(phi[i] - phi[j]) * c for i, j, c in edge]
+    e_hat = [i for i in range(len(e_all)) if e_all[i] < eps_m]
     pre = []
-    while index:
-        if pre == index:
+    while len(e_hat):
+        if pre == e_hat:
             break
-        deleted = 0
-        for k in index:
-            deleted += abs(phi[edge[k][0]] - phi[edge[k][1]]) * edge[k][2]
-        W -= deleted
-        uc_wets = [
-            (1 - len(index) * epsilon) / W * abs(phi[i] - phi[j]) * c
-            for i, j, c in edge
+        for k in e_hat:
+            W -= abs(phi[edge[k][0]] - phi[edge[k][1]]) * edge[k][2]
+        e_all = [
+            (1 - len(e_hat) * eps_m) / W * abs(phi[i] - phi[j]) * c for i, j, c in edge
         ]
-        for k in index:
-            uc_wets[k] = epsilon
+        for k in e_hat:
+            e_all[k] = eps_m
         # if iter % 10 == 0:
-        #   print(iter, index)
-        pre = index
-        index = [i for i in range(0, len(uc_wets)) if uc_wets[i] <= epsilon]
+        #   print(iter, e_hat)
+        pre = e_hat
+        e_hat = [i for i in range(0, len(e_all)) if e_all[i] <= eps_m]
     # if iter % 10 == 0:
     #   import pdb
     #   pdb.set_trace()
 
-    return uc_wets
+    return e_all
 
-    # while min(uc_wets) < epsilon:
+    # while min(uc_wets) < eps_m:
     #   index  = uc_wets.index(min(uc_wets))
-    #   uc_wets[index]  = epsilon
+    #   uc_wets[index]  = eps_m
 
     # return
 
 
 # In[ ]:
 
-import math
 
-
-def altertating_minimization(n, edge, min_cut=[], cut_val=1):
-    CAP = 1e8
+def altertating_minimization(n, edge, min_cuts=[], cut_val=1):
     m = len(edge)
     # eps = .01/m
     res = [[i, j, m * c ** 2] for i, j, c in edge]
     # zhiyi真的是天才
-    previous = None
-    previous_phi = None
     data1 = []
     data2 = []
     data3 = []
-    data4 = []
+    data4 = [[] for i in range(len(min_cuts))]
     flag = "y"
-    for num in range(200):
-        phi, flow, energy_changephi = electrical_flow(n, res)
-        if data2 != [] and abs(data2[-1] - math.sqrt(energy_changephi)) < 1e-3:
-            break
-        data2.append(math.sqrt(energy_changephi))
-        # capacity_raw = np.zeros(n)
-        # residual = 1
-        capacity = [x[2] for x in edge]
-        weights = update_accurate(phi, edge)
-        W = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
-        # res = [[i, j, min(c * W / abs(phi[i] - phi[j]), CAP)] for i, j, c in edge]
-        res = []
-        for id in range(0, len(edge)):
-          item = [edge[id][0], edge[id][1], edge[id][2]**2/ weights[id]]
-          res.append(item)
-        nu = 1
-        for i in min_cut:
-            nu *= weights[i] ** (capacity[i] / cut_val)
+    for ind in range(1000):
 
-        if data4 != [] and flag == "y":
-            if nu < data4[-1]:
-                flag = "n"
-        data4.append(nu)
+        phi, flow, energy = electrical_flow(n, res)
+
+        if data2 != [] and abs(data2[-1] - math.sqrt(energy)) < 1e-5:
+            break
+        # cap_raw = np.zeros(n)
+        # residual = 1
+
+        w = update_w(phi, edge)
+        res = []
+
+        for id in range(0, len(edge)):
+            item = [edge[id][0], edge[id][1], edge[id][2] ** 2 / w[id]]
+            res.append(item)
+
+        cap = [x[2] for x in edge]
+        for j in range(len(min_cuts)):
+            nu  = 1
+            for i in min_cuts[j]:
+                nu *= w[i] ** (cap[i] / cut_val)
+            if data4[j]!= [] and flag == "y":
+                if nu < data4[j][-1]:
+                  flag = 'n'
+            data4[j].append(nu)
+                
+
+        data1.append(phi)
+        data2.append(math.sqrt(energy))
+        data3.append(w)
         # if num != 0:
         #  for i in range(m):
-        #  capacity_raw[edge[i][0]] +=  edge[i][2]**2/previous[i]
-        #  capacity_raw[edge[i][1]] +=  edge[i][2]**2/previous[i]
-        #  for i in range(len(capacity_raw)):
-        #  residual  += (phi - previous_phi)[i]**2 *min(capacity_raw)
+        #  cap_raw[edge[i][0]] +=  edge[i][2]**2/previous[i]
+        #  cap_raw[edge[i][1]] +=  edge[i][2]**2/previous[i]
+        #  for i in range(len(cap_raw)):
+        #  residual  += (phi - previous_phi)[i]**2 *min(cap_raw)
         #  print("residual : %f" % residual)
         #  print("iterate number: %d" % num)
-        #  print("energy :%d" % math.sqrt(energy_changephi))
+        #  print("energy :%d" % math.sqrt(energy))
         #  print("nu:%f" % nu)
         # previous_phi = phi
 
@@ -291,21 +302,19 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
         # energy_term1 = sum(energy_term1)
         # print('=== after round %4d ===' % i)
         # import pdb
-        # print('energy_reduced_by_phi= %f' %  ( energy_changeres - energy_changephi))
-        # weights = update_cvx(phi, edge)
-        #  ans =  (np.array(weights) -  np.array( previous) )@  np.array(congestion)
+        # print('energy_reduced_by_phi= %f' %  ( energy_changeres - energy))
+        # w = update_cvx(phi, edge)
+        #  ans =  (np.array(w) -  np.array( previous) )@  np.array(congestion)
         #  print("energy_decrease_gradient = %f" % ans )/woshitaincai1
 
-        # capacity = [(1/x[2])**2 for x in edge]
-        # resistance = np.array(weights)* np.array(capacity)
+        # cap = [(1/x[2])**2 for x in edge]
+        # resistance = np.array(w)* np.array(cap)
 
         # sss = []
         #
         # for i in range(len(resistance)):
         #  sss.append([edge[i][0],edge[i][1],1/resistance[i]])
         # print('energy = %f' % energy)
-        data1.append(phi)
-        data3.append(weights)
         # in
         # weight_res = []
         # res = [[i, j, min(c*W/abs(phi[i]-phi[j]), CAP)] for i, j, c in edge]
@@ -317,16 +326,16 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
         # energy_changeres = sum([(phi[i]-phi[j])**2*r for i, j, r in res])
         # energy_changeres2 = sum([(phi[i]-phi[j])**2*r for i, j, r in sss])
         #
-        # capacity_raw = np.zeros(n)
+        # cap_raw = np.zeros(n)
         # import pdb
         # pdb.set_trace()
 
-        # previous = weights
+        # previous = w
 
         # if num % 1 == 0:
         #   print('energy = %f' %  np.sqrt( energy_changeres))
         #   print('energy2 = %f' %  np.sqrt(energy_changeres2))
-        #   print('energy_reduced_by_res : %f' % (-energy_changeres2 + energy_changephi) )
+        #   print('energy_reduced_by_res : %f' % (-energy_changeres2 + energy) )
         # #res = [[i, j, c*W/abs(phi[i]-phi[j])] for i, j, c in edge]
         # if i % 10 == 0:
         #     print('=== after round %4d ===' % i)
@@ -336,9 +345,9 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
 
         #     c = max([flow[j][2]/edge[j][2] for j in range(len(edge))])
         # print([flow[j][2]/edge[j][2] for j in range(len(edge))])
-
+    if len(min_cuts) > 1:
+        flag = flag + "mulcut"
     return phi, flow, data1, data2, data3, data4, flag
-
 
 # In[ ]: j
 # phi, flow , data, data2,data3, data4= altertating_minimization(n, edge)
@@ -347,7 +356,7 @@ def altertating_minimization(n, edge, min_cut=[], cut_val=1):
 # df3 = pd.DataFrame(data = data3)
 # df4 = pd.DataFrame(data = data4)
 # df2.to_excel("energy.xlsx")
-# df3.to_excel("weightsj.xlsx")
+# df3.to_excel("wj.xlsx")
 
 # df4.to_excel("nu.xlsx")
 #
