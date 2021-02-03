@@ -112,10 +112,31 @@ def test_graph_7():
 
 def test_graph_8():
   return 3,[
-    [0,1,1],
-    [0,1,2],
-    [1,2,4],
+    [0,1,math.sqrt(5)],
+    [1,2,2],
   ]
+
+
+def test_graph_9():
+  return 4,[[0,1,2],
+    [0,1,2],
+    [1,2,10],
+    [2,3,2],
+  ]
+
+def test_graph_10():
+  return 6,[[0,3,1.5],
+    [0,4,1],
+    [3,1,2],
+    [4,1,2],
+    [0,1,1.5],
+    [1,2,10],
+    [2,5,.5],
+    [3,5,1],
+    [1,5,2.5],
+  ]
+
+
 # In[ ]:
 
 
@@ -157,10 +178,12 @@ def electrical_flow(n, res):
         A[i, i] += r
         A[j, j] += r
 
+    
     A[0, :] = np.zeros(n)
     A[0, 0] = 1.0
     A[n - 1, :] = np.zeros(n)
     A[n - 1, n - 1] = 1.0
+    
 
     b = np.zeros(n)
     b[0] = 1
@@ -168,7 +191,6 @@ def electrical_flow(n, res):
     # add 1-0 cosntraint to   variable phi
     # qifei
     # phi = spsolve(A, b)
-    
     phi = np.linalg.inv(A) @ b
     # @ operation just work as np.dot
     flow = [[i, j, (phi[i] - phi[j]) * r] for i, j, r in res]
@@ -249,15 +271,19 @@ def altertating_minimization(n, edge, min_cuts=[], cut_val=1):
     m = len(edge)
     # eps = .01/m
     res = [[i, j, m * c ** 2] for i, j, c in edge]
+    
     # zhiyi真的是天才
     data1 = []
     data2 = []
     data3 = []
     data4 = [[] for i in range(len(min_cuts))]
+    data5 = [[] for i in range(len(min_cuts))]
+    
     flag = "y"
     for ind in range(1000):
 
         phi, flow, energy = electrical_flow(n, res)
+        
 
         if data2 != [] and abs(data2[-1] - math.sqrt(energy)) < 1e-5:
             break
@@ -271,15 +297,24 @@ def altertating_minimization(n, edge, min_cuts=[], cut_val=1):
             item = [edge[id][0], edge[id][1], edge[id][2] ** 2 / w[id]]
             res.append(item)
 
-        cap = [x[2] for x in edge]
+        # cap = [x[2] for x in edge]
+        # phi_e = [abs(phi[i[0]] - phi[i[1]]) for i in  edge]
+        # cong = [flow[i][2]/cap[i] for i in range(m)] 
+        # phi_c = [phi_e[i]*cap[i] for i in range(m)]
+        # wtow =  cong /sum(phi_c)
         for j in range(len(min_cuts)):
             nu  = 1
+            eta = 0
             for i in min_cuts[j]:
+                # nu2 = [cap[i] * math.log(wtow[i]) for i in min_cuts[j]]
+                # ans = sum(nu2)/sum(cap)
                 nu *= w[i] ** (cap[i] / cut_val)
+                eta += w[i]
             if data4[j]!= [] and flag == "y":
                 if nu < data4[j][-1]:
                   flag = 'n'
             data4[j].append(nu)
+            data5[j].append(eta)
                 
 
         data1.append(phi)
@@ -347,7 +382,7 @@ def altertating_minimization(n, edge, min_cuts=[], cut_val=1):
         # print([flow[j][2]/edge[j][2] for j in range(len(edge))])
     if len(min_cuts) > 1:
         flag = flag + "mulcut"
-    return phi, flow, data1, data2, data3, data4, flag
+    return phi, flow, data1, data2, data3, data4, data5,flag
 
 # In[ ]: j
 # phi, flow , data, data2,data3, data4= altertating_minimization(n, edge)

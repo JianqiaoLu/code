@@ -1,3 +1,4 @@
+import pdb
 from graph_tool.all import *
 import numpy as np
 from numpy.core.numeric import ones
@@ -248,7 +249,7 @@ def rd_edges():
     return edges
 
 
-def to_excel(edge, data1, data2, data3, data4, is_mul, *args):
+def to_excel(edge, data1, data2, data3, data4, data5,is_mul, *args):
     f = is_mul
     try:
       f += args[0]
@@ -259,6 +260,7 @@ def to_excel(edge, data1, data2, data3, data4, is_mul, *args):
     df2 = pd.DataFrame(data=data2)
     df3 = pd.DataFrame(data=data3)
     df4 = pd.DataFrame(data=data4)
+    df5 = pd.DataFrame(data=data5)
     dir = "/data5/"
     if not os.path.exists(dir[1:-1]):
         os.mkdir(dir[1:-1])
@@ -268,24 +270,31 @@ def to_excel(edge, data1, data2, data3, data4, is_mul, *args):
     df2.to_excel(filepath + "energy__" + f + ".xlsx")
     df3.to_excel(filepath + "weights__" + f + ".xlsx")
     df4 = df4.T
+    df5 = df5.T
     df4.to_excel(filepath + "nu__" + f + ".xlsx")
+    df5.to_excel(filepath + "eta__" + f + ".xlsx")
 
 def exer_graph():
-        label = "test_graph_8"
+        label = "test_graph_10"
         n, edge = globals()[label]()
         g, e_cap = nedge_g(n, edge)
         n, edge = g_nedge(g, e_cap)
-        phi, flow, data1, data2, data3, data4, f = altertating_minimization(
+        phi, flow, data1, data2, data3, data4, data5,f = altertating_minimization(
             n,
             edge,
         )
         min_cuts, _ = find_mincut(phi, g)
-        phi, flow, data1, data2, data3, data4, f = altertating_minimization(
+        cut_value = 0
+        for i in min_cuts[0]:
+           cut_value += edge[i][2]
+        
+        
+        phi, flow, data1, data2, data3, data4, data5,f = altertating_minimization(
             n, edge, min_cuts, int(data2[-1])
         )
         edge.append(min_cuts)
         draw(g, label)
-        to_excel(edge, data1, data2, data3, data4, f, label)
+        to_excel(edge, data1, data2, data3, data4, data5,f, label)
     
     
 
@@ -296,42 +305,42 @@ def test_origp():
         n, edge = globals()[label]()
         g, e_cap = nedge_g(n, edge)
         n, edge = g_nedge(g, e_cap)
-        phi, flow, data1, data2, data3, data4, f = altertating_minimization(
+        phi, flow, data1, data2, data3, data4, data5,f = altertating_minimization(
             n,
             edge,
         )
         min_cuts, _ = find_mincut(phi, g)
-        phi, flow, data1, data2, data3, data4, f = altertating_minimization(
+        phi, flow, data1, data2, data3, data4, data5,f = altertating_minimization(
             n, edge, min_cuts, int(data2[-1])
         )
         edge.append(min_cuts)
         draw(g, label)
-        to_excel(edge, data1, data2, data3, data4, f, label)
+        to_excel(edge, data1, data2, data3, data4, data5,f, label)
 
 
 def test_rdgp():
     for i in range(4, 100):
         label = str(i)
-        g, e_cap = random_graph_mulcut(i, 40)
+        g, e_cap = random_graph(i, 40)
         n, edge = g_nedge(g, e_cap)
-        phi, flow, data1, data2, data3, data4, is_mul= altertating_minimization(
+        phi, flow, data1, data2, data3, data4, data5,is_mul= altertating_minimization(
             n,
             edge,
         )
         min_cuts, _ = find_mincut(phi, g)
 
-        phi, flow, data1, data2, data3, data4, is_mul= altertating_minimization(
+        phi, flow, data1, data2, data3, data4, data5,is_mul= altertating_minimization(
             n, edge, min_cuts, int(data2[-1])
         )
         edge.append(min_cuts)
         draw(g, label)
-        to_excel(edge, data1, data2, data3, data4, is_mul, label)
+        to_excel(edge, data1, data2, data3, data4, data5,is_mul, label)
 
 def debug_gp():
     label = "debug"
     filepath = os.getcwd() + "/data1/capacity__y54.xlsx"
     g, e_cap, edge, n = debug_graph(filepath)
-    phi, flow, data1, data2, data3, data4, is_mul= altertating_minimization(
+    phi, flow, data1, data2, data3, data4, data5,is_mul= altertating_minimization(
         n,
         edge,
     )
@@ -341,43 +350,43 @@ def debug_gp():
     for i in min_cut:
         cut_value += edge[i][2]
     """
-    phi, flow, data1, data2, data3, data4, is_mul= altertating_minimization(
+    phi, flow, data1, data2, data3, data4, data5,is_mul= altertating_minimization(
         n, edge, min_cuts, int(data2[-1])
     )
     edge.append(min_cuts)
     draw(g, label)
-    to_excel(edge, data1, data2, data3, data4, is_mul, label)
+    to_excel(edge, data1, data2, data3, data4, data5,is_mul, label)
 
 
 def test_dbgp():
     edges = rd_edges()
     for e_ in edges:
         g, e_cap, edge, n = e2graph(e_)
-        phi, flow, data1, data2, data3, data4, is_mul= altertating_minimization(n, edge)
+        phi, flow, data1, data2, data3, data4, data5,is_mul= altertating_minimization(n, edge)
         min_cuts, _ = find_mincut(phi, g)
         cut_value = 0
         
         for i in min_cuts[0]:
           cut_value += edge[i][2]
         draw(g)
-        phi, flow, data1, data2, data3, data4, is_mul= altertating_minimization(
+        phi, flow, data1, data2, data3, data4, data5,is_mul= altertating_minimization(
             n, edge, min_cuts, int(data2[-1])
         )
         edge.append(min_cuts)
-        to_excel(edge, data1, data2, data3, data4, is_mul)
+        to_excel(edge, data1, data2, data3, data4, data5,is_mul)
   
 def test_ggp():
      g =  collection.data["karate"]
      e_cap = np.ones(g.num_edges())
      n, edge = g_nedge2(g, e_cap)
-     phi, flow, data1, data2, data3, data4, is_mul = altertating_minimization(n, edge)
+     phi, flow, data1, data2, data3, data4, data5,is_mul = altertating_minimization(n, edge)
      draw(g)
      min_cuts, _ = find_mincut(phi, g)
-     phi, flow, data1, data2, data3, data4, is_mul = altertating_minimization(
+     phi, flow, data1, data2, data3, data4, data5,is_mul = altertating_minimization(
             n, edge, min_cuts, int(data2[-1])
         )
      edge.append(min_cuts)
-     to_excel(edge, data1, data2, data3, data4, is_mul)
+     to_excel(edge, data1, data2, data3, data4, data5,is_mul)
 
 
 if __name__ == "__main__":
@@ -387,5 +396,5 @@ if __name__ == "__main__":
     # main3()
     # main4()
     # test_rdgp()
-    # exer_graph()
-    test_dbgp()
+    exer_graph()
+    # test_dbgp()
